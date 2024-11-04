@@ -19,6 +19,13 @@ For simplicity, We have implemented class diagrams with class names only. </br>
 
 * **Photo** </br>
 
+## 👥 Team Member
+
+201934219 Kim Joonhee </br>
+
+2021</br>
+2021</br>
+2021</br>
  
 ## ✔️ Source
 * Youtube video you referenced </br>
