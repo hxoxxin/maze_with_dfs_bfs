@@ -91,55 +91,63 @@ public class MazeActivity extends AppCompatActivity {
         return row > 0 && row < maze.length && col > 0 && col < maze[0].length;
     }
 
+    class Node {
+        int x, y, steps;
+        Node prev;
+
+        Node(int x, int y, int steps, Node prev) {
+            this.x = x;
+            this.y = y;
+            this.steps = steps;
+            this.prev = prev;
+        }
+    }
+
     // BFS 알고리즘을 이용해 최단 경로 찾기
     private ArrayList<int[]> findShortestPath() {
-        int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-        boolean[][] visited = new boolean[rows][cols]; // 미로의 각 위치에 대한 방문 여부
-        Queue<int[]> queue = new LinkedList<>(); // 각 셀의 위치를 큐에 넣어 순차적으로 탐색. FIFO
-        ArrayList<int[]> path = new ArrayList<>(); // 최단 경로를 저장하는 리스트
+        int[] dx = {-1, 1, 0, 0}; // 상, 하, 좌, 우
+        int[] dy = {0, 0, -1, 1};
+        boolean[][] visited = new boolean[mazeSize][mazeSize]; // 방문 여부 확인 array
 
-        // 경로를 역추적하기 위한 부모 정보 저장
-        // (각 위치 (row, col)에 도달하기 직전 위치를 기록하여, 출구에 도달했을 때 역추적하여 최단 경로를 구성할 수 있게 함)
-        int[][] parent = new int[rows * cols][2];
-
-        queue.add(new int[]{characterRow, characterCol}); // 시작 위치 (characterRow, characterCol)
+        Queue<Node> queue = new LinkedList<>(); // Queue 초기화
+        queue.add(new Node(characterRow, characterCol, 0, null));
         visited[characterRow][characterCol] = true;
 
         while (!queue.isEmpty()) {
-            int[] current = queue.poll(); // 큐의 맨 앞에 있는 위치를 꺼내 현재 위치로 설정
-            int row = current[0];
-            int col = current[1];
+            Node current = queue.poll();
+            int x = current.x;
+            int y = current.y;
 
-            // 출구에 도달했을 경우
-            if (row == exitRow && col == exitCol) {
-                // 경로를 추적하여 저장
-                while (row != characterRow || col != characterCol) {
-                    path.add(0, new int[]{row, col}); // path 리스트 맨 앞에 현재 위치를 추가하여 최단 경로를 구성
-                    int index = row * cols + col; // 현재 위치 (row, col)을 1차원 배열 인덱스로 변환하기 위한 값. (cols: 미로의 크기)
-                    row = parent[index][0];
-                    col = parent[index][1];
+            // 목적지에 도달한 경우
+            if (x == exitRow && y == exitCol) {
+                ArrayList<int[]> path = new ArrayList<>();
+
+                // 경로 역추적 및 ArrayList에 저장
+                while (current != null) {
+                    path.add(0, new int[]{current.x, current.y}); // 역순으로 추가
+                    current = current.prev;
                 }
-                path.add(0, new int[]{characterRow, characterCol});
-                return path;
+
+                return path; // ArrayList<int[]> 경로 반환
             }
 
-            // 네 방향으로 이동
-            for (int[] direction : directions) {
-                int newRow = row + direction[0];
-                int newCol = col + direction[1];
+            // 네 방향 탐색
+            for (int i = 0; i < 4; i++) {
+                int nx = x + dx[i];
+                int ny = y + dy[i];
 
-                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && maze[newRow][newCol] == 0 && !visited[newRow][newCol]) {
-                    visited[newRow][newCol] = true;
-                    queue.add(new int[]{newRow, newCol});
-                    // parent 배열의 인덱스 newRow * cols + newCol에 현재 위치 (row, col)을 저장하여,
-                    // 이동할 다음 위치의 부모가 현재 위치임을 기록
-                    parent[newRow * cols + newCol] = new int[]{row, col};
+                // 미로 내에 있고, 방문하지 않았으며, 길인 경우
+                if (nx >= 0 && nx < mazeSize && ny >= 0 && ny < mazeSize && !visited[nx][ny] && maze[nx][ny] == 0) {
+                    visited[nx][ny] = true;
+                    Node nextNode = new Node(nx, ny, current.steps + 1, current);
+                    queue.add(nextNode);
                 }
             }
         }
-        return null; // 출구까지 경로가 없는 경우
-    }
 
+        // 경로가 없는 경우
+        return null;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
